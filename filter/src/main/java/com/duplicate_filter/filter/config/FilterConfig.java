@@ -14,10 +14,10 @@ public class FilterConfig {
     //대신 수행함으로써 제어 흐름이 역전되는 구조를 의미함.
      
     @Bean
-    public FilterRegistrationBean<HashFilter> loggingHashFilter(){
+    public FilterRegistrationBean<HashFilter> loggingHashFilter(HashFilter hashFilter){ //Bean을 주입받도록 설정 
         FilterRegistrationBean<HashFilter> registrationBean=new FilterRegistrationBean<>();
 
-        registrationBean.setFilter(new HashFilter());
+        registrationBean.setFilter(hashFilter); //new HashFilter() <- 이런식으로 넣으면 Spring Bean이 아니라서 내부 의존성이 주입되지 않음.
         //HashFilter 필터 클래스 적용 
         registrationBean.addUrlPatterns("/*");
         //모든 요청에 대해 필터링을 수행하도록 설정
