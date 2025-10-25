@@ -23,6 +23,7 @@ public class FilterController {
     
     @PostMapping("/store")
     public ResponseEntity<String> storeData(@RequestBody Map<String,String> body){
+        log.info("Request Received");
         String string=body.get("string"); //파라미터 검사
         if(string==null){
             return ResponseEntity.status(HttpStatus.CONFLICT).body("no argument provided");
