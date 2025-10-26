@@ -65,7 +65,7 @@ public class HashFilter extends OncePerRequestFilter implements HttpFilter {
         try{
             hashedRequest=hasher.hashify(content, ipAddress, requestURL);
         }catch(NoSuchAlgorithmException e){
-            throw new RuntimeException("Algorithm for hashing not correct"); //RuntimeError로 처리하면 안되는데... Custom Exception을 만들어야해..
+            throw new IllegalArgumentException("Algorithm for hashing not correct");
         } 
 
         HashedRequestDetails requestDetails=HashedRequestDetails.builder()
