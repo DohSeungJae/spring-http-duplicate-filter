@@ -9,8 +9,4 @@ public class HashedRequestDetails implements RequestDetails {
 
     private String hashedRequest;
 
-    public void setHash(String hash){
-        this.hashedRequest=hash;
-    }
-
 }
