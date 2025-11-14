@@ -14,16 +14,16 @@ public class HashMapRequestStore implements RequestStore{
     private long validityPeriod; 
 
     @Override
-    public boolean isDuplicateOrElseStore(String hash){
+    public boolean isDuplicateOrElseStore(String key){
         LocalDateTime now=LocalDateTime.now();
-        LocalDateTime result=hashMap.putIfAbsent(hash, now); //key가 중복이라면 key에 대한 기존 value, 중복이 아니라면 null 반환 
+        LocalDateTime result=hashMap.putIfAbsent(key, now); //key가 중복이라면 key에 대한 기존 value, 중복이 아니라면 null 반환 
         if(result==null) return false;
-        else if(isRequestExpired(hash)) return false; //중복인 경우에도 기존 요청이 만료된 경우 "중복이 아닌 것으로" 간주
+        else if(isRequestExpired(key)) return false; //중복인 경우에도 기존 요청이 만료된 경우 "중복이 아닌 것으로" 간주
         else return true;
     }
 
     @Override
-    public boolean isRequestExpired(String hash){
+    public boolean isRequestExpired(String key){
         //요청 해시(hash)의 저장 시각(value)에 대해 다음을 검사함
         //  -(현재 시각) > (저장 시각 + 유효 기간)
 
@@ -31,11 +31,11 @@ public class HashMapRequestStore implements RequestStore{
         //더 이상 중복 검사에 필요하지 않으므로 삭제해야함
 
         LocalDateTime now=LocalDateTime.now();
-        LocalDateTime storedTime=hashMap.get(hash);
+        LocalDateTime storedTime=hashMap.get(key);
         LocalDateTime expiredTime=storedTime.plusSeconds(validityPeriod);
         boolean expired=now.isAfter(expiredTime);
 
-        hashMap.put(hash,now);
+        hashMap.put(key,now);
         
         return expired;
     }
