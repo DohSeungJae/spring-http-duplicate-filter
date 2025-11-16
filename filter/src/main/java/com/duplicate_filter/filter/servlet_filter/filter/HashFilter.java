@@ -8,8 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import com.duplicate_filter.filter.servlet_filter.DTO.HashedRequestDetails;
-import com.duplicate_filter.filter.servlet_filter.DTO.RequestDetails;
 import com.duplicate_filter.filter.servlet_filter.cached_body.CachedBodyHttpServletRequest;
 import com.duplicate_filter.filter.servlet_filter.request_hasher.RequestHasher;
 import com.duplicate_filter.filter.servlet_filter.request_store.RequestStore;
@@ -23,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
-public class HashFilter extends OncePerRequestFilter implements HttpFilter {
+public class HashFilter extends OncePerRequestFilter {
 
     @Autowired
     @Qualifier("hashMapRequestStore") 
@@ -39,9 +37,7 @@ public class HashFilter extends OncePerRequestFilter implements HttpFilter {
         //request에서 직접 body를 가져오면 Controller에서는 body를 읽을 수 없기 때문에 body를 읽기 전에 미리 cache하도록 함
         CachedBodyHttpServletRequest cachedRequest=new CachedBodyHttpServletRequest(request);
 
-        HashedRequestDetails requestDetails=(HashedRequestDetails)this.getRequestDetails(cachedRequest);
-        String hashedRequest=requestDetails.getHashedRequest();
-        
+        String hashedRequest=getHashedRequest(cachedRequest);
         Boolean duplicate=store.isDuplicateOrElseStore(hashedRequest);
         if(duplicate){
             log.warn("Duplicate Request Occured");
@@ -52,12 +48,7 @@ public class HashFilter extends OncePerRequestFilter implements HttpFilter {
         }
     }
 
-    @Override
-    public RequestDetails getRequestDetails(HttpServletRequest request) throws IOException{
-        if (!(request instanceof CachedBodyHttpServletRequest)) {
-            throw new IllegalArgumentException("Expected CachedBodyHttpServletRequest but received " + request.getClass().getSimpleName());
-        }
-
+    public String getHashedRequest(CachedBodyHttpServletRequest request) throws IOException{
         String content=getContentFromRequest(request);
         String ipAddress=request.getRemoteAddr(); //body에 접근하지 않기 때문에 body는 소모되지 않음
         String requestURL=request.getRequestURL().toString(); //body에 접근하지 않기 때문에 body는 소모되지 않음 //.getRequestURL()은 StringBuffer를 반환하기 때문에 .toString()이 필요함
@@ -66,20 +57,9 @@ public class HashFilter extends OncePerRequestFilter implements HttpFilter {
             hashedRequest=hasher.hashify(content, ipAddress, requestURL);
         }catch(NoSuchAlgorithmException e){
             throw new IllegalArgumentException("Algorithm for hashing not correct");
-        } 
+        }
 
-        HashedRequestDetails requestDetails=HashedRequestDetails.builder()
-            .hashedRequest(hashedRequest)
-            .build();
-        
-        return requestDetails;
-    }
-
-    @Override
-    public void denyTheRequest(HttpServletResponse response) throws IOException{
-        response.setStatus(429); //Too Many Requests
-        response.setContentType("application/json");
-        response.getWriter().write("{\"error\": \"Duplicate request detected. Please try again later.\"}");
+        return hashedRequest;
     }
 
     public String getContentFromRequest(HttpServletRequest cachedRequest) throws IOException{ //사실상 CachedBodyHttpServletRequest을 받음
@@ -91,15 +71,19 @@ public class HashFilter extends OncePerRequestFilter implements HttpFilter {
 
         JsonNode jsonNode=mapper.readTree(body);
         JsonNode stringNode=jsonNode.get("string");
-
         if(stringNode==null || stringNode.isNull()){
             throw new IllegalArgumentException("Missing required filed: 'string'");
         }
-
         String content=jsonNode.get("string").asText();
         return content;
     }
 
+    
+    public void denyTheRequest(HttpServletResponse response) throws IOException{
+        response.setStatus(429); //Too Many Requests
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\": \"Duplicate request detected. Please try again later.\"}");
+    }
 
     
 }
