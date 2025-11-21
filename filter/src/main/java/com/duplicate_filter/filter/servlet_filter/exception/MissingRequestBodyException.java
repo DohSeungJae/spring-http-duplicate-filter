@@ -1,6 +1,6 @@
 package com.duplicate_filter.filter.servlet_filter.exception;
 
-public class MissingRequestBodyException extends Exception {
+public class MissingRequestBodyException extends RuntimeException {
     
     public MissingRequestBodyException(){
         super();
