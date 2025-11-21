@@ -37,7 +37,7 @@ public class IdempotencyKeyFilter extends OncePerRequestFilter{
         Boolean duplicate=store.isDuplicateOrElseStore(idempotencyKey); //exception으로 바꾸기?, Java스럽게 변경? -> requireNotDuplicateAndStore(exception 사용하는 경우)
         //storeIfNotDuplicate
         if(duplicate){
-            log.warn("Duplicate Request Occured(Idempotency Key)");
+            log.warn("Duplicate request occured(Idempotency Key)");
             denyTheRequest(response);
         }else{
             filterChain.doFilter(request, response);
