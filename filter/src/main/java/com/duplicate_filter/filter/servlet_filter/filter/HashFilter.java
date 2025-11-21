@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import com.duplicate_filter.filter.servlet_filter.cached_body.CachedBodyHttpServletRequest;
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@Profile("hash")
 public class HashFilter extends OncePerRequestFilter {
 
     @Autowired
