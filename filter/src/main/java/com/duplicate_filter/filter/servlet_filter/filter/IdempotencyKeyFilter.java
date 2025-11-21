@@ -1,6 +1,7 @@
 package com.duplicate_filter.filter.servlet_filter.filter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
@@ -49,13 +50,15 @@ public class IdempotencyKeyFilter extends OncePerRequestFilter{
     public void denyTheRequest(HttpServletResponse response) throws IOException{
         response.setStatus(429); //Too Many Requests
         response.setContentType("application/json");
-        response.getWriter().write("{\"error\": \"Duplicate request detected. Please try again later. (Idempotency Key)\"}");
+        PrintWriter writer=response.getWriter();
+        writer.write("{\"error\": \"Duplicate request detected. Please try again later. (Idempotency Key)\"}");
     }
 
     public void denyTheRequest(HttpServletResponse response, int status, String message) throws IOException{
         response.setStatus(status); //Too Many Requests
         response.setContentType("application/json");
-        response.getWriter().write("{\"error\": \"" + message + "\"}");
+        PrintWriter writer=response.getWriter();
+        writer.write("{\"error\": \"" + message + "\"}");
     }
 
     public String getIdempotencyKeyOrElseThrow(HttpServletRequest request) throws IdempotencyKeyNotFoundException{ //MissingIdempotencyKeyException?
