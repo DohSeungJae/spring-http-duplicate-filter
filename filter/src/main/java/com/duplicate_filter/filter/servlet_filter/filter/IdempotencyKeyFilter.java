@@ -61,11 +61,10 @@ public class IdempotencyKeyFilter extends OncePerRequestFilter{
     }
 
     public void rejectRequest(HttpServletResponse response, int status, String message) throws IOException{
-        response.setStatus(status); //Too Many Requests
+        response.setStatus(status); 
         response.setContentType("application/json");
         PrintWriter writer=response.getWriter();
         writer.write("{\"error\": \"" + message + "\"}");
     }
-
 
 }

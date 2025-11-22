@@ -107,5 +107,6 @@ public class HashFilter extends OncePerRequestFilter {
         response.setContentType("application/json");
         PrintWriter writer=response.getWriter();
         writer.write("{\"error\": \"" + message + "\"}");
-    }   
+    }  
+
 }

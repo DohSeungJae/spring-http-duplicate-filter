@@ -6,5 +6,4 @@ public interface RequestStore {
 
     public boolean checkAndUpdateExpiration(String key);
 
-
 }

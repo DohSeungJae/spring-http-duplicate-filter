@@ -17,4 +17,5 @@ public class MissingRequestBodyException extends RuntimeException {
     public MissingRequestBodyException(Throwable cause){
         super(cause);
     }
+
 }

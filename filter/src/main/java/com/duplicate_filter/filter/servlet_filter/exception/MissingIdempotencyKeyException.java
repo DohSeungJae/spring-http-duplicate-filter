@@ -18,6 +18,4 @@ public class MissingIdempotencyKeyException extends RuntimeException {
         super(cause);
     }
 
-
-    
 }

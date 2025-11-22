@@ -1,7 +1,6 @@
 package com.duplicate_filter.filter.domain.controller;
 
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,4 +38,5 @@ public class FilterController {
         jdbcTemplate.update(insertQuery,string);
         return ResponseEntity.status(HttpStatus.OK).body("success");
     }
+
 }

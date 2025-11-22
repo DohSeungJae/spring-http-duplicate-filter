@@ -6,6 +6,7 @@ import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 
 public class CachedBodyServletInputStream extends ServletInputStream {
+    
     //이 클래스는 ByteArrayInputStream에게 읽기 작업을 위임하는 구조
     //대부분의 기능을 ByteArrayInputStream가 수행하는데 굳이 이 클래스를 정의한 이유?
     //ServletInputStream을 상속하기 위함.
@@ -37,4 +38,5 @@ public class CachedBodyServletInputStream extends ServletInputStream {
     public int read(){
         return inputStream.read();
     }
+
 }

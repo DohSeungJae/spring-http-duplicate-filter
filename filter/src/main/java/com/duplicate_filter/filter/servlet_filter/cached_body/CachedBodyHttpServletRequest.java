@@ -10,8 +10,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 
 public class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
-    //이 클래스는 기존 객체(HttpServletRequestWrapper)를 감싸서 기능을 확장하는 데코레이터 패턴이라고 함.
 
+    //이 클래스는 기존 객체(HttpServletRequestWrapper)를 감싸서 기능을 확장하는 데코레이터 패턴이라고 함.
     //HttpServletRequestWrapper는 자신이 받은 요청 객체에 대부분의 작업을 넘기는데, 이것을 위임이라고 함.
     //이 클래스는 대부분의 기능을 HttpServletRequest에게 위임.
     //이 클래스도 HttpServletRequest에 대한 데코레이터 클래스라고 볼 수 있음.
@@ -41,4 +41,5 @@ public class CachedBodyHttpServletRequest extends HttpServletRequestWrapper {
         return new BufferedReader(new InputStreamReader(getInputStream()));
     }
     //요청 본문을 문자 기반으로 읽을 수 있는 BufferedReader를 반환
+
 }
