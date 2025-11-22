@@ -27,7 +27,7 @@ public class IdempotencyKeyFilter extends OncePerRequestFilter{
     @Override
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException{
         
-        String idempotencyKey; //idempotencyKey=null ? 
+        String idempotencyKey;
         try{
             idempotencyKey=requireIdempotencyKey(request);
         }catch(MissingIdempotencyKeyException e){
