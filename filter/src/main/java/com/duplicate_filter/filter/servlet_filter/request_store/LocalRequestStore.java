@@ -5,8 +5,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-@Component("hashMapRequestStore") //bean name을 파라미터로 넣는데, spring bean의 작명 컨벤션은 카멜 케이스임
-public class HashMapRequestStore implements RequestStore{
+@Component("localRequestStore") //bean name을 파라미터로 넣는데, spring bean의 작명 컨벤션은 카멜 케이스임
+public class LocalRequestStore implements RequestStore{
 
     private ConcurrentHashMap<String, LocalDateTime> hashMap=new ConcurrentHashMap<>();
 
@@ -14,16 +14,16 @@ public class HashMapRequestStore implements RequestStore{
     private long validityPeriod; 
 
     @Override
-    public boolean isDuplicateOrElseStore(String key){
+    public boolean storeIfNotDuplicate(String key){
         LocalDateTime now=LocalDateTime.now();
         LocalDateTime result=hashMap.putIfAbsent(key, now); //key가 중복이라면 key에 대한 기존 value, 중복이 아니라면 null 반환 
         if(result==null) return false;
-        else if(isRequestExpired(key)) return false; //중복인 경우에도 기존 요청이 만료된 경우 "중복이 아닌 것으로" 간주
+        else if(checkAndUpdateExpiration(key)) return false; //중복인 경우에도 기존 요청이 만료된 경우 "중복이 아닌 것으로" 간주
         else return true;
     }
 
     @Override
-    public boolean isRequestExpired(String key){
+    public boolean checkAndUpdateExpiration(String key){
         //요청 해시(hash)의 저장 시각(value)에 대해 다음을 검사함
         //  -(현재 시각) > (저장 시각 + 유효 기간)
 

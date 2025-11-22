@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class HashFilter extends OncePerRequestFilter {
 
     @Autowired
-    @Qualifier("hashMapRequestStore") 
+    @Qualifier("localRequestStore") 
     private RequestStore store;
 
     @Autowired
@@ -44,30 +44,30 @@ public class HashFilter extends OncePerRequestFilter {
         CachedBodyHttpServletRequest cachedRequest=new CachedBodyHttpServletRequest(request);
         String hashedRequest;
         try{
-            hashedRequest=getHashedRequest(cachedRequest);
+            hashedRequest=createHashedRequest(cachedRequest);
         }catch(MissingRequestBodyException e){
-            denyTheRequest(response, 400, e.getMessage());
+            rejectRequest(response, 400, e.getMessage());
             return ;
         }
 
-        boolean duplicate=store.isDuplicateOrElseStore(hashedRequest);
+        boolean duplicate=store.storeIfNotDuplicate(hashedRequest);
         if(duplicate){
             log.warn("Duplicate request occured");
-            denyTheRequest(response);
+            rejectRequest(response);
             return ;
         }else{
             filterChain.doFilter(cachedRequest, response);
         }
     }
 
-    public String getHashedRequest(CachedBodyHttpServletRequest request) throws IOException{
-        String content=getContentFromRequest(request);
+    public String createHashedRequest(CachedBodyHttpServletRequest request) throws IOException{
+        String content=extractContent(request);
         String ipAddress=request.getRemoteAddr(); //body에 접근하지 않기 때문에 body는 소모되지 않음
         StringBuffer requestURL=request.getRequestURL(); //body에 접근하지 않기 때문에 body는 소모되지 않음
         String requestURLString=requestURL.toString(); 
         String hashedRequest;
         try{
-            hashedRequest=hasher.hashify(content,ipAddress,requestURLString);
+            hashedRequest=hasher.createHash(content,ipAddress,requestURLString);
         }catch(NoSuchAlgorithmException e){
             throw new IllegalArgumentException("Algorithm for hashing not correct");
         }
@@ -75,7 +75,7 @@ public class HashFilter extends OncePerRequestFilter {
         return hashedRequest;
     }
 
-    public String getContentFromRequest(HttpServletRequest cachedRequest) throws IOException{ //사실상 CachedBodyHttpServletRequest을 받음
+    public String extractContent(HttpServletRequest cachedRequest) throws IOException{ //사실상 CachedBodyHttpServletRequest을 받음
         String body;
         //try-with-resource, reader 사용이 끝나면 JVM이 reader.close()를 자동으로 호출 <- 리소스 누수 방지
         try(BufferedReader reader=cachedRequest.getReader()){
@@ -95,19 +95,17 @@ public class HashFilter extends OncePerRequestFilter {
         return content;
     }
 
-    public void denyTheRequest(HttpServletResponse response) throws IOException{
+    public void rejectRequest(HttpServletResponse response) throws IOException{
         response.setStatus(429); //Too Many Requests
         response.setContentType("application/json");
         PrintWriter writer=response.getWriter();
         writer.write("{\"error\": \"Duplicate request detected. Please try again later.\"}");
     }
 
-    public void denyTheRequest(HttpServletResponse response, int status, String message) throws IOException{
+    public void rejectRequest(HttpServletResponse response, int status, String message) throws IOException{
         response.setStatus(status); 
         response.setContentType("application/json");
         PrintWriter writer=response.getWriter();
         writer.write("{\"error\": \"" + message + "\"}");
-    }
-
-    
+    }   
 }

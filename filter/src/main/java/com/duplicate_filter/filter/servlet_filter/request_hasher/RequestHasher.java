@@ -13,7 +13,7 @@ public class RequestHasher {
     @Value("${encryption.key}")
     private String encryptionKey;
 
-    public String hashify(String content, String ip, String url) throws NoSuchAlgorithmException{
+    public String createHash(String content, String ip, String url) throws NoSuchAlgorithmException{
         String combined=content+"-"+ip+"-"+url+"-"+encryptionKey;
 
         MessageDigest digest=MessageDigest.getInstance("SHA256");

@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import com.duplicate_filter.filter.servlet_filter.exception.IdempotencyKeyNotFoundException;
+import com.duplicate_filter.filter.servlet_filter.exception.MissingIdempotencyKeyException;
 import com.duplicate_filter.filter.servlet_filter.request_store.RequestStore;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,51 +21,51 @@ import lombok.extern.slf4j.Slf4j;
 public class IdempotencyKeyFilter extends OncePerRequestFilter{
 
     @Autowired
-    @Qualifier("hashMapRequestStore")
+    @Qualifier("localRequestStore")
     private RequestStore store;
     
     @Override
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException{
         
-        String idempotencyKey=null;
+        String idempotencyKey; //idempotencyKey=null ? 
         try{
-            idempotencyKey=getIdempotencyKeyOrElseThrow(request); //Java 스럽게 변경? //requireIdempotencyKey
-        }catch(IdempotencyKeyNotFoundException e){
-            denyTheRequest(response, 400, e.getMessage());
+            idempotencyKey=requireIdempotencyKey(request);
+        }catch(MissingIdempotencyKeyException e){
+            rejectRequest(response, 400, e.getMessage());
             return ;
         }
         
-        Boolean duplicate=store.isDuplicateOrElseStore(idempotencyKey); //exception으로 바꾸기?, Java스럽게 변경? -> requireNotDuplicateAndStore(exception 사용하는 경우)
-        //storeIfNotDuplicate
+        boolean duplicate=store.storeIfNotDuplicate(idempotencyKey);
         if(duplicate){
             log.warn("Duplicate request occured(Idempotency Key)");
-            denyTheRequest(response);
+            rejectRequest(response);
         }else{
             filterChain.doFilter(request, response);
         }
         return ;
     }
 
-
-    public void denyTheRequest(HttpServletResponse response) throws IOException{
+    public String requireIdempotencyKey(HttpServletRequest request){ 
+        String idempotencyKey=request.getHeader("Idempotency-Key");
+        if(idempotencyKey==null){
+            throw new MissingIdempotencyKeyException("Idempotency Key cannot be found in header");
+        }
+        return idempotencyKey;
+    }
+    
+    public void rejectRequest(HttpServletResponse response) throws IOException{
         response.setStatus(429); //Too Many Requests
         response.setContentType("application/json");
         PrintWriter writer=response.getWriter();
         writer.write("{\"error\": \"Duplicate request detected. Please try again later. (Idempotency Key)\"}");
     }
 
-    public void denyTheRequest(HttpServletResponse response, int status, String message) throws IOException{
+    public void rejectRequest(HttpServletResponse response, int status, String message) throws IOException{
         response.setStatus(status); //Too Many Requests
         response.setContentType("application/json");
         PrintWriter writer=response.getWriter();
         writer.write("{\"error\": \"" + message + "\"}");
     }
 
-    public String getIdempotencyKeyOrElseThrow(HttpServletRequest request) throws IdempotencyKeyNotFoundException{ //MissingIdempotencyKeyException?
-        String idempotencyKey=request.getHeader("Idempotency-Key");
-        if(idempotencyKey==null){
-            throw new IdempotencyKeyNotFoundException("Idempotency Key cannot be found in header");
-        }
-        return idempotencyKey;
-    }
+
 }
